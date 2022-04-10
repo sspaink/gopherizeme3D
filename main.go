@@ -12,12 +12,24 @@ import (
 )
 
 func main() {
-	width := js.Global.Get("innerWidth").Float()
-	height := js.Global.Get("innerHeight").Float()
+	listener := func(e *js.Object) {
+		dropdown := js.Global.Get("document").Call("querySelector", ".dropdown")
+		click := func(event *js.Object) {
+			event.Call("stopPropagation")
+			dropdown.Get("classList").Call("toggle", "is-active")
+		}
+		dropdown.Call("addEventListener", "click", click)
+	}
+
+	js.Global.Get("document").Call("addEventListener", "DOMContentLoaded", listener)
+
+	width := js.Global.Get("innerWidth").Float() - 300
+	height := js.Global.Get("innerHeight").Float() - 50
 
 	renderer := three.NewWebGLRenderer()
 	renderer.SetSize(width, height, true)
-	js.Global.Get("document").Get("body").Call("appendChild", renderer.Get("domElement"))
+
+	js.Global.Get("document").Call("getElementById", "scene").Call("appendChild", renderer.Get("domElement"))
 
 	// setup camera and scene
 	camera := three.NewPerspectiveCamera(70, width/height, 1, 500)
@@ -91,6 +103,8 @@ func main() {
 	// start animation
 	var animate func()
 	animate = func() {
+		// t := js.Global.Get("THREE").Get("TrackballControls").New(camera, renderer.Get("domElement"))
+		// t.Call("update")
 		js.Global.Call("requestAnimationFrame", animate)
 		// mesh.Rotation.Set("x", mesh.Rotation.Get("x").Float()+0.01)
 		// mesh.Rotation.Set("y", mesh.Rotation.Get("y").Float()+0.01)
