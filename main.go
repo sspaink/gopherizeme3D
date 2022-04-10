@@ -59,8 +59,6 @@ func main() {
 		log.Panicf("Oh no! %s", err)
 	}
 
-	log.Printf("Hello!")
-
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		log.Panicf("Oh no! %s", err)
@@ -99,12 +97,11 @@ func main() {
 	mesh.Rotation.Set("x", mesh.Rotation.Get("x").Float()+4.5)
 	scene.Add(mesh)
 	scene.Background = three.NewColor("gray")
-
+	t := js.Global.Get("THREE").Get("OrbitControls").New(camera, renderer.Get("domElement"))
 	// start animation
 	var animate func()
 	animate = func() {
-		// t := js.Global.Get("THREE").Get("TrackballControls").New(camera, renderer.Get("domElement"))
-		// t.Call("update")
+		t.Call("update")
 		js.Global.Call("requestAnimationFrame", animate)
 		// mesh.Rotation.Set("x", mesh.Rotation.Get("x").Float()+0.01)
 		// mesh.Rotation.Set("y", mesh.Rotation.Get("y").Float()+0.01)
