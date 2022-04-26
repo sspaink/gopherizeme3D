@@ -43,7 +43,7 @@ func newGopherThree(width, height float64) (GopherThree, error) {
 
 	geom := three.NewBufferGeometry()
 
-	resp, err := http.Get("http://localhost:9000/GopherPrintable.stl")
+	resp, err := http.Get("http://localhost:9000/fileserver/GopherPrintable.stl")
 	if err != nil {
 		return GopherThree{}, err
 	}

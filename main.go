@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"net/http"
 
 	"github.com/gopherjs/gopherjs/js"
 )
@@ -14,6 +15,10 @@ func main() {
 			eyesSelector := js.Global.Get("document").Call("getElementById", "eyes")
 			index := eyesSelector.Get("selectedIndex")
 			log.Println(eyesSelector.Get("options").Index(index.Int()).Get("value").String())
+
+			go func() {
+				http.PostForm("http://localhost:9000/stl", nil)
+			}()
 		}
 		renderButton.Call("addEventListener", "click", click)
 	}
