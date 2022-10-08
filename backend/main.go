@@ -28,13 +28,18 @@ func CORSMiddleware() gin.HandlerFunc {
 }
 
 func GenerateProgram() error {
+	err := os.Mkdir("generated", 0777)
+	if err != nil {
+		return err
+	}
+
 	f := NewFile("main")
 	f.Func().Id("main").Params().Block(
 		List(Id("body"), Id("_")).Op(":=").Qual("github.com/deadsy/sdfx/sdf", "Sphere3D").Call(Lit(45)),
-		Qual("github.com/deadsy/sdfx/render", "RenderSTL").Call(Id("body"), Lit(300), Lit("gopher.stl")),
+		Qual("github.com/deadsy/sdfx/render", "ToSTL").Call(Id("body"), Lit("gopher.stl"), Qual("github.com/deadsy/sdfx/render", "NewMarchingCubesOctree").Call(Lit(300))),
 	)
 
-	err := os.WriteFile("generated/main.go", []byte(fmt.Sprintf("%#v", f)), 0644)
+	err = os.WriteFile("generated/main.go", []byte(fmt.Sprintf("%#v", f)), 0777)
 	if err != nil {
 		return err
 	}
@@ -42,13 +47,22 @@ func GenerateProgram() error {
 	if err != nil {
 		return err
 	}
-	out, _ := exec.Command("ls").Output()
-	fmt.Println(string(out))
-	cmd := exec.Command("go", "run", "main.go")
-	err = cmd.Run()
+	err = exec.Command("go", "mod", "init", "generated").Run()
 	if err != nil {
 		return err
 	}
+	err = exec.Command("go", "mod", "tidy").Run()
+	if err != nil {
+		return err
+	}
+	out, _ := exec.Command("ls").Output()
+	fmt.Println(string(out))
+	cmd := exec.Command("go", "run", "main.go")
+	output, err := cmd.Output()
+	if err != nil {
+		return err
+	}
+	fmt.Println(string(output))
 	return nil
 }
 
@@ -60,8 +74,11 @@ func main() {
 	r.StaticFile("fileserver/GopherPrintable.stl", "./GopherPrintable.stl")
 
 	r.POST("stl", func(c *gin.Context) {
-		GenerateProgram()
-		exec.Command("go run generated/main.go")
+		err := GenerateProgram()
+		if err != nil {
+			fmt.Print(err)
+			return
+		}
 	})
 
 	err := r.Run(":9000")
